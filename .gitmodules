@@ -1,0 +1,18 @@
+[submodule "FUZZY"]
+	path = FUZZY
+	url = https://github.com/M1A5TO/Fuzzy-Logic-Profiles.git
+[submodule "AI"]
+	path = AI
+	url = https://github.com/M1A5TO/AI-interior-image-classifier.git
+[submodule "BACKEND"]
+	path = BACKEND
+	url = https://github.com/M1A5TO/Backend.git
+[submodule "FRONTEND"]
+	path = FRONTEND
+	url = https://github.com/M1A5TO/Web-Application.git
+[submodule "POI"]
+	path = POI
+	url = https://github.com/M1A5TO/15MC-Algorithm.git
+[submodule "SCRAPPER"]
+	path = SCRAPPER
+	url = https://github.com/M1A5TO/realestate-scraper.git
