@@ -13,12 +13,12 @@ Projekt M1A5TO jest rozwijany jako zestaw repozytoriów w organizacji GitHub: ht
 
 Linki do źródłowych repozytoriów:
 
-- **FRONTEND (Web Application):** https://github.com/M1A5TO/Web-Application
-- **SCRAPPER (realestate-scraper):** https://github.com/M1A5TO/realestate-scraper
+- **FRONTEND:** https://github.com/M1A5TO/Web-Application
+- **SCRAPPER (real-estate listing scraper):** https://github.com/M1A5TO/realestate-scraper
 - **BACKEND:** https://github.com/M1A5TO/Backend
 - **AI (interior image classifier):** https://github.com/M1A5TO/AI-interior-image-classifier
-- **POI / 15-minute city algorithm:** https://github.com/M1A5TO/15MC-Algorithm
-- **FUZZY (Fuzzy Logic Profiles):** https://github.com/M1A5TO/Fuzzy-Logic-Profiles
+- **POI (15-minute city algorithm):** https://github.com/M1A5TO/15MC-Algorithm
+- **FUZZY (fuzzy logic for user profiles):** https://github.com/M1A5TO/Fuzzy-Logic-Profiles
 
 ## Uruchomienie lokalne (Windows + Docker Desktop)
 
