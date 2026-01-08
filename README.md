@@ -1,6 +1,6 @@
-# M1A5TO (local integration)
+# M1A5TO 
 
-To repo jest "superprojektem" spinającym submodule: BACKEND, SCRAPPER, POI, AI, FUZZY.
+To repo jest "superprojektem" spinającym moduły: BACKEND, SCRAPPER, POI, AI, FUZZY oraz FRONTEND.
 
 ## Uruchomienie lokalne (Windows + Docker Desktop)
 
