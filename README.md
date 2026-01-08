@@ -1,6 +1,24 @@
 # M1A5TO 
 
-To repo jest "superprojektem" spinającym moduły: BACKEND, SCRAPPER, POI, AI, FUZZY oraz FRONTEND.
+To repo spina moduły projektu (BACKEND, SCRAPPER, POI, AI, FUZZY oraz FRONTEND) i umożliwia uruchomienie całości lokalnie (Docker).
+Projekt M1A5TO jest rozwijany jako zestaw repozytoriów w organizacji GitHub: https://github.com/M1A5TO
+
+## Krótki opis / Short description
+
+**PL:** Celem projektu jest zbudowanie aplikacji webowej (serwisu), która na podstawie danych podanych przez użytkownika wyszukuje mieszkania na terenie Polski i analizuje je w kontekście koncepcji 15‑minutowego miasta, dodatkowo określając ich kluczowe parametry (cena, metraż, dostępność do POI, wyniki dla określonych profili, analizy zdjęć w ofertach).
+
+**EN:** The goal of the project is to build a web application (service) which, based on user-provided input, searches for apartments across Poland and analyzes them in the context of the 15-minute city concept, additionally determining their key parameters (price, size, accessibility to POI, profile-based score, image analysis).
+
+## Repositories / Repozytoria
+
+Linki do źródłowych repozytoriów:
+
+- **FRONTEND (Web Application):** https://github.com/M1A5TO/Web-Application
+- **SCRAPPER (realestate-scraper):** https://github.com/M1A5TO/realestate-scraper
+- **BACKEND:** https://github.com/M1A5TO/Backend
+- **AI (interior image classifier):** https://github.com/M1A5TO/AI-interior-image-classifier
+- **POI / 15-minute city algorithm:** https://github.com/M1A5TO/15MC-Algorithm
+- **FUZZY (Fuzzy Logic Profiles):** https://github.com/M1A5TO/Fuzzy-Logic-Profiles
 
 ## Uruchomienie lokalne (Windows + Docker Desktop)
 
