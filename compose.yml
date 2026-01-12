@@ -3,6 +3,7 @@ name: m1a5to
 services:
   postgres:
     image: postgis/postgis:16-3.4
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -10,35 +11,42 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./BACKEND/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "5400:5432"
+    networks:
+      - internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} || exit 1"]
       interval: 10s
-      timeout: 5s
+      timeout: 35s
       retries: 10
       start_period: 30s
 
   rabbitmq:
     image: rabbitmq:3.12-management
+    restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-rabbit_user}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-ChangeMeRabbit!}
-    ports:
-      - "5672:5672"
-      - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - internal
+    ports:
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 15s
+      retries: 10
+      start_period: 30s
 
   api:
-    build:
-      context: ./BACKEND/api
-      dockerfile: Dockerfile
+    image: matiko42/zsd2
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -48,10 +56,11 @@ services:
       # backend używa RABBITMQ_URL (amqp://user:pass@host:port/)
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-rabbit_user}:${RABBITMQ_DEFAULT_PASS:-ChangeMeRabbit!}@rabbitmq:5672/
       MEDIA_ROOT: /media/photos
-    ports:
-      - "8081:8000"
     volumes:
       - media_data:/media/photos
+    networks:
+      - internal
+      - frontend-net
 
   scrapper-otodom:
     build:
@@ -61,16 +70,18 @@ services:
       api:
         condition: service_started
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-rabbit_user}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-ChangeMeRabbit!}
       API_URL: http://api:8000
-    # Uwaga: ustawione na cały kraj (bez --city) i limit stron. Zmień/usuń flagi poniżej żeby scrapować inaczej.
+    networks:
+      - internal
+    # Uwaga: ustawione na cały kraj (bez --city). Otodom live nie przyjmuje --max-pages, użyj --limit jeśli potrzeba.
     # Opis CLI i flag jest w repo scrappera: SCRAPPER/README.md
-    command: ["otodom", "live", "--max-pages", "${SCRAPPER_MAX_PAGES:-200}"]
+    command: ["otodom", "live"]
 
   scrapper-morizon:
     build:
@@ -80,13 +91,15 @@ services:
       api:
         condition: service_started
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-rabbit_user}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-ChangeMeRabbit!}
       API_URL: http://api:8000
+    networks:
+      - internal
     # Uwaga: ustawione na cały kraj (bez --city) i limit stron. Zmień/usuń flagi poniżej żeby scrapować inaczej.
     # Opis CLI i flag jest w repo scrappera: SCRAPPER/README.md
     command: ["morizon", "live", "--max-pages", "${SCRAPPER_MAX_PAGES:-200}"]
@@ -99,13 +112,15 @@ services:
       api:
         condition: service_started
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-rabbit_user}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-ChangeMeRabbit!}
       API_URL: http://api:8000
+    networks:
+      - internal
     # Uwaga: ustawione na cały kraj (bez --city) i limit stron. Zmień/usuń flagi poniżej żeby scrapować inaczej.
     # Opis CLI i flag jest w repo scrappera: SCRAPPER/README.md
     command: ["gratka", "live", "--max-pages", "${SCRAPPER_MAX_PAGES:-200}"]
@@ -118,43 +133,30 @@ services:
       api:
         condition: service_started
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-rabbit_user}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-ChangeMeRabbit!}
       API_URL: http://api:8000
-    # Uwaga: ustawione na cały kraj (bez --city) i limit stron. Zmień/usuń flagi poniżej żeby scrapować inaczej.
+    networks:
+      - internal
+    # Uwaga: ustawione na cały kraj (bez --city). Trojmiasto live przyjmuje --max-pages w CLI, ale funkcja run_trojmiasto_stream go nie obsługuje.
     # Opis CLI i flag jest w repo scrappera: SCRAPPER/README.md
-    command: ["trojmiasto", "live", "--max-pages", "${SCRAPPER_MAX_PAGES:-200}"]
+    command: ["trojmiasto", "live"]
 
-  scrapper:
-    build:
-      context: ./SCRAPPER
-      dockerfile: Dockerfile
-    depends_on:
-      api:
-        condition: service_started
-      rabbitmq:
-        condition: service_started
-    environment:
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-rabbit_user}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-ChangeMeRabbit!}
-      API_URL: http://api:8000
-    command: ["--help"]
 
   poi-worker:
     build:
       context: ./POI
       dockerfile: Dockerfile
+    restart: unless-stopped
     depends_on:
       api:
         condition: service_started
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
@@ -167,6 +169,8 @@ services:
       GRID_JSON: ${POI_GRID_JSON:-data/grid_test.json}
       WORKSPACE_DIR: workspace
       POI_QUERY_SCRIPT: python_scripts/poi_query.py
+    networks:
+      - internal
 
   ai-worker:
     build:
@@ -176,7 +180,7 @@ services:
       api:
         condition: service_started
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
@@ -188,18 +192,19 @@ services:
       LORA_WEIGHTS_PATH: lora_models/comprehensive_lora.pth
     volumes:
       - ./AI/lora_models:/app/lora_models:ro
+    networks:
+      - internal
 
   fuzzy-worker:
     build:
       context: ./FUZZY
       dockerfile: Dockerfile
+    restart: unless-stopped
     depends_on:
       api:
         condition: service_started
       rabbitmq:
-        condition: service_started
-      ai-worker:
-        condition: service_started
+        condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
@@ -211,22 +216,33 @@ services:
       # Opcjonalne tuningi fuzzy (patrz FUZZY/score_apartments_offline.py)
       TIME_UNIT: ${FUZZY_TIME_UNIT:-seconds}
       ALPHA: ${FUZZY_ALPHA:-0.9}
+    networks:
+      - internal
 
   frontend:
     build:
       context: ./FRONTEND
       dockerfile: Dockerfile
+    restart: unless-stopped
     depends_on:
       api:
         condition: service_started
     environment:
-      # Jeśli kiedyś będziemy chcieli bez proxy, można nadpisać np. http://localhost:8081
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+      # Vite proxy przekierowuje /api/* na http://api:8000/* (zobacz vite.config.ts)
+      VITE_API_BASE_URL: /api
     ports:
       - "5173:5173"
     volumes:
       - ./FRONTEND:/app
       - /app/node_modules
+    networks:
+      - frontend-net
+
+networks:
+  internal:
+    driver: bridge
+  frontend-net:
+    driver: bridge
 
 volumes:
   postgres_data:
